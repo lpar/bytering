@@ -1,3 +1,3 @@
-Simple Go implementation of a circular byte buffer, for fast scanning of
+Example Go implementation of a circular byte buffer, for fast scanning of
 large data streams to find particular byte sequences without reading all
 the data into RAM.

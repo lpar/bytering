@@ -64,6 +64,28 @@ func TestNotFound(t *testing.T) {
 	}
 }
 
+func TestStringing(t *testing.T) {
+	ring := NewByteRing(20)
+	ring.WriteByte(65)
+	ring.WriteByte(66)
+	ring.WriteByte(67)
+	s := ring.String()
+	if len(s) != 3 {
+		t.Errorf("failed to return correct length of string, expected 3 got %d", len(s))
+	}
+}
+
+func TestStringWrap(t *testing.T) {
+	ring := NewByteRing(4)
+	for i := 65; i <= 69; i++ {
+		ring.WriteByte(byte(i))
+	}
+	s := ring.String()
+	if s != "BCDE" {
+		t.Errorf("failed to return correct wraparound string, got '%s'", s)
+	}
+}
+
 func TestTooSmall(t *testing.T) {
 	ring := NewByteRing(8)
 	data := []byte("ABCDEFGHI")

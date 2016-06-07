@@ -17,9 +17,9 @@ package bytering
 import "bytes"
 
 type ByteRing struct {
-	data  []byte
-	start int
-	end   int
+	data   []byte
+	idx    int
+	length int
 }
 
 // NewByteRing creates and returns a new ByteRing with the specified capacity.
@@ -31,21 +31,24 @@ func NewByteRing(capacity int) *ByteRing {
 
 // WriteByte writes a byte to the ByteRing
 func (b *ByteRing) WriteByte(x byte) {
-	b.data[b.end] = x
-	if b.start == b.end {
-		b.start = (b.start + 1) % cap(b.data)
+	b.data[b.idx] = x
+	b.idx = (b.idx + 1) % cap(b.data)
+	if b.length < cap(b.data) {
+		b.length += 1
 	}
-	b.end = (b.end + 1) % cap(b.data)
 }
 
 // Compare checks to see if the ByteRing's current contents match the specified
-// byte slice. Comparison begins at the current start of the ByteRing, which
+// byte slice. Comparison begins at the current idx of the ByteRing, which
 // will be the oldest byte written to the ByteRing and still in its buffer.
 //
 // If the ByteRing's capacity is smaller than the length of the byte slice
 // you are searching for, you will never find it.
 func (b *ByteRing) Compare(find []byte) bool {
-	j := b.start
+	if b.length < len(find) {
+		return false
+	}
+	j := b.idx
 	for _, c := range find {
 		if b.data[j] != c {
 			return false
@@ -55,17 +58,25 @@ func (b *ByteRing) Compare(find []byte) bool {
 	return true
 }
 
+/*
+func dump(data []byte) {
+	for _, x := range data {
+		fmt.Printf("%02x ", x)
+	}
+	for _, x := range data {
+		fmt.Printf("%c", x)
+	}
+	fmt.Println()
+}
+*/
+
 // Return the current contents of the ByteRing as an array of bytes.
 // Uses bytes.Buffer to make a copy and hence requires a memory allocation,
 // so don't use this in a loop.
 func (b *ByteRing) Bytes() []byte {
 	var s bytes.Buffer
-	if b.end > b.start {
-		s.Write(b.data[b.start:b.end])
-	} else {
-		s.Write(b.data[b.start:])
-		s.Write(b.data[:b.end])
-	}
+	s.Write(b.data[b.idx:])
+	s.Write(b.data[:b.idx])
 	return s.Bytes()
 }
 
@@ -73,5 +84,5 @@ func (b *ByteRing) Bytes() []byte {
 // caveats.
 func (b *ByteRing) String() string {
 	bytes := b.Bytes()
-	return string(bytes)
+	return string(bytes[:b.length])
 }
